@@ -42,6 +42,11 @@ export type { SpindleCapability as SpindleCapabilityType } from "./capabilities.
 export { ALL_CAPABILITIES, isValidCapability } from "./capabilities.js";
 
 export { SpindleEvent, CoreEventType } from "./events.js";
+export type {
+  RuntimeStateRevisionDTO, RuntimeEventMetadataDTO, RuntimeCharacterDTO, RuntimeChatDTO,
+  RuntimeMessageDTO, RuntimeStateSnapshotDTO, RuntimeStateCommandDTO,
+  RuntimeStateAcknowledgementDTO, SpindleRuntimeStateAPI,
+} from "./runtime-state.js";
 
 export type { SpindleFrontendRuntimeCapability } from "./frontend-capabilities.js";
 export {

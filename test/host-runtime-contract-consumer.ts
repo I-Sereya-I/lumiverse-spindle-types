@@ -211,3 +211,9 @@ const widgetFrontendModule: import("lumiverse-spindle-types").SpindleWidgetFront
   },
 };
 void widgetFrontendModule;
+
+spindle.registerMacroInterceptor(async (ctx) => {
+  if (ctx.sourceOwner?.extensionIdentifier === 'owned-template') return { text: ctx.template, touchedVars: [] };
+}, 100, { handlesOwnedSources: true });
+const ownedMacroRegistration: WorkerToHost = { type: 'register_macro_interceptor', handlesOwnedSources: true };
+void ownedMacroRegistration;

@@ -97,11 +97,14 @@ export interface InterceptorMatchDTO {
 
 export interface InterceptorRegistrationMatchOptions {
   match?: InterceptorMatchDTO;
+  /** Stop generation on failure instead of continuing with the previous prompt. */
+  required?: boolean;
 }
 
 export interface InterceptorRegistrationOptions {
   priority?: number;
   match?: InterceptorMatchDTO;
+  required?: boolean;
 }
 
 /**
@@ -109,6 +112,8 @@ export interface InterceptorRegistrationOptions {
  * `signal` is local to the worker invocation and is never serialized.
  */
 export interface InterceptorContextDTO {
+  /** Host-selected execution document, pinned for this generation. Absent when no main frontend is connected. */
+  readonly frontendSessionId?: string;
   readonly userId: string;
   readonly chatId: string;
   readonly generationId: string;
@@ -300,6 +305,8 @@ export interface MacroInterceptorCtxDTO {
   readonly commit: boolean;
   readonly phase: MacroInterceptorPhase;
   readonly sourceHint?: string;
+  /** Present when this extension is the opted-in evaluator for the complete source. */
+  readonly sourceOwner?: { readonly extensionIdentifier: string };
   /**
    * User ID that initiated the macro resolution (when available). Relevant
    * for operator-scoped extensions that need to route work through other
@@ -3474,6 +3481,7 @@ export type WorkerToHost =
       registrationId: string;
       priority?: number;
       match?: InterceptorMatchDTO;
+      required?: boolean;
     }
   | { type: "unregister_interceptor"; registrationId: string }
   | {
@@ -3706,14 +3714,15 @@ export type WorkerToHost =
       keys: string[];
     }
   | { type: "cors_request"; requestId: string; url: string; options: RequestInitDTO }
-  | { type: "register_context_handler"; priority?: number; timeoutMs?: number }
+  | { type: "register_context_handler"; priority?: number; timeoutMs?: number; required?: boolean }
   | {
       type: "context_handler_result";
       requestId: string;
       context: unknown;
+      error?: string;
     }
   // ─── Macro Interceptor (gated: "macro_interceptor") ────────────────
-  | { type: "register_macro_interceptor"; priority?: number }
+  | { type: "register_macro_interceptor"; priority?: number; handlesOwnedSources?: boolean }
   | {
       type: "macro_interceptor_result";
       requestId: string;
@@ -3739,7 +3748,9 @@ export type WorkerToHost =
       result?: string;
       error?: string;
     }
-  | { type: "frontend_message"; payload: unknown; userId?: string }
+  | { type: "frontend_message"; payload: unknown; userId?: string; frontendSessionId?: string }
+  | { type: "runtime_state_read"; requestId: string; chatId: string; characterId: string; userId?: string }
+  | { type: "runtime_state_write"; requestId: string; chatId: string; command: import("./runtime-state.js").RuntimeStateCommandDTO; userId?: string; mutationId?: string }
   | { type: "user_storage_read"; requestId: string; path: string; userId?: string }
   | { type: "user_storage_write"; requestId: string; path: string; data: string; userId?: string }
   | { type: "user_storage_read_binary"; requestId: string; path: string; userId?: string }
@@ -4114,6 +4125,7 @@ export type HostToWorker =
       requestId: string;
       context: unknown;
     }
+  | { type: "context_handler_abort"; requestId: string; reason: string }
   | {
       type: "macro_interceptor_request";
       requestId: string;
@@ -4178,7 +4190,7 @@ export type HostToWorker =
       contextMessages?: LlmMessageDTO[];
     }
   | { type: "shutdown" }
-  | { type: "frontend_message"; payload: unknown; userId: string }
+  | { type: "frontend_message"; payload: unknown; userId: string; frontendSessionId?: string }
   | { type: "frontend_process_lifecycle"; event: FrontendProcessLifecycleEventDTO }
   | { type: "frontend_process_message"; processId: string; payload: unknown; userId: string }
   | { type: "backend_process_lifecycle"; event: BackendProcessLifecycleEventDTO }

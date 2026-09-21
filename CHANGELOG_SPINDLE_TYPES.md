@@ -1,5 +1,11 @@
 # Lumiverse Spindle Types - Technical Changelog
 
+## 0.6.35
+- Added capability-gated document routing, cancellable required generation hooks,
+  and runtime state snapshots, mutation acknowledgements, and event metadata.
+  Existing message handlers and optional hook registrations remain valid.
+- Added optional display processing state and authoritative macro source ownership.
+
 ## Unreleased
 - Version 0.6.33 adds prompt-local `outputOrder` to world-info interceptor
   entries and mutations, plus the `worldInfoOutputOrdering` host contract.

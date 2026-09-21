@@ -13,6 +13,7 @@
     }
   },
   "include": [
+    "test/frontend-runtime-consumer.ts",
     "test/loom-block-editor-consumer.ts",
     "test/bound-generation-consumer.ts",
     "test/interceptor-consumer.ts",

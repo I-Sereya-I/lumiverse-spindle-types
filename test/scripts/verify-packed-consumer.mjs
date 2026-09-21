@@ -89,7 +89,7 @@ try {
           lib: ["ESNext", "DOM"],
           noEmit: true,
         },
-        include: ["packed-0.6.16-consumer.ts"],
+        include: ["packed-0.6.16-consumer.ts", "frontend-runtime-consumer.ts"],
       },
       null,
       2,
@@ -97,6 +97,7 @@ try {
   );
 
   copyFileSync(sourceConsumer, join(fixtureDir, "packed-0.6.16-consumer.ts"));
+  copyFileSync(join(repoRoot, "test/frontend-runtime-consumer.ts"), join(fixtureDir, "frontend-runtime-consumer.ts"));
 
   runNpm(
     [

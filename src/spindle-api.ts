@@ -1443,11 +1443,13 @@ export interface SpindleAPI {
    * `dryRun` (tokenize/preview assemblies) and `userId`, returning it with
    * `cancelGeneration: true` stops the generation, and `opts.timeoutMs`
    * overrides the default 10s wall-clock budget (clamped to 1s-120s).
+   * Hosts with required-context-handlers-v1 supply cancellation and honor
+   * `required: true` by stopping generation on handler failure or timeout.
    */
   registerContextHandler(
-    handler: (context: unknown) => Promise<unknown>,
+    handler: (context: unknown, signal?: AbortSignal) => Promise<unknown>,
     priority?: number,
-    opts?: { timeoutMs?: number }
+    opts?: { timeoutMs?: number; required?: boolean }
   ): void;
 
   /**
@@ -1478,11 +1480,18 @@ export interface SpindleAPI {
    * Each invocation runs inside a 10-second wall-clock budget on the host.
    * On timeout or thrown error the chain logs the failure and forwards the
    * previous template to the next handler — macro evaluation itself never
-   * aborts. A second registration from the same extension replaces the
+   * aborts in the normal chain. Owned-source evaluation instead rejects on failure.
+   * A second registration from the same extension replaces the
    * previous handler.
    *
    * @param handler  Returns the transformed template, or `void` to pass through.
    * @param priority Lower values run first. Default `100`.
+   * @param opts Opt into exclusive evaluation of macro-bearing regex templates owned
+   * by this extension. The handler receives the unmodified source with `sourceOwner`
+   * set and must return a result, which is used verbatim without native evaluation.
+   * Plain templates skip dispatch. Stored messages on characters with this extension
+   * namespace's `display_owner: true` also stay verbatim for its display pipeline.
+   * Other templates retain normal chain behavior.
    *
    * @example
    * ```ts
@@ -1496,7 +1505,8 @@ export interface SpindleAPI {
     handler: (
       ctx: MacroInterceptorCtxDTO
     ) => Promise<MacroInterceptorResultDTO>,
-    priority?: number
+    priority?: number,
+    opts?: { handlesOwnedSources?: boolean }
   ): void;
 
   /**
@@ -1592,10 +1602,14 @@ export interface SpindleAPI {
    *                 other API call site that surfaced one) to route the reply
    *                 only to that user. User-scoped extensions always deliver
    *                 to their installer regardless of this argument.
+   * @param options A document target requires frontend-session-routing-v1 and
+   *                never falls back to broadcasting when disconnected.
    */
-  sendToFrontend(payload: unknown, userId?: string): void;
+  sendToFrontend(payload: unknown, userId?: string, options?: { frontendSessionId?: string }): void;
   /** Receive messages from the frontend module (userId is the sender) */
-  onFrontendMessage(handler: (payload: unknown, userId: string) => void): () => void;
+  onFrontendMessage(handler: (payload: unknown, userId: string, frontendSessionId?: string) => void): () => void;
+  /** Versioned snapshots and command acknowledgements; requires runtime-state-v1. */
+  runtimeState: import("./runtime-state.js").SpindleRuntimeStateAPI;
 
   /**
    * Backend-owned lifecycle controller for tracked frontend processes.
