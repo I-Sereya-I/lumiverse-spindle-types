@@ -959,6 +959,8 @@ export interface SpindleDisplayScriptsArgs {
  * not ready for the chat, throws, or returns `null`.
  */
 export interface SpindleDisplayResolver {
+  /** Skip automatic formatting repairs in owned chat message bodies. Defaults to false; HTML sanitization still applies. */
+  skipFormattingHealing?: boolean;
   /** Opt into finalization when no display scripts are active. Defaults to false. */
   finalizeWithoutScripts?: boolean;
   ready(chatId: string): boolean;

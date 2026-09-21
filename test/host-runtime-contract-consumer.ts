@@ -217,3 +217,13 @@ spindle.registerMacroInterceptor(async (ctx) => {
 }, 100, { handlesOwnedSources: true });
 const ownedMacroRegistration: WorkerToHost = { type: 'register_macro_interceptor', handlesOwnedSources: true };
 void ownedMacroRegistration;
+
+const formattingResolver: import('lumiverse-spindle-types').SpindleDisplayResolver = {
+  skipFormattingHealing: true,
+  ready: () => true,
+  resolveBody: async () => null,
+  resolveTemplates: async () => null,
+  applyScripts: async () => null,
+};
+const formattingOptOut: boolean | undefined = formattingResolver.skipFormattingHealing;
+void formattingOptOut;
